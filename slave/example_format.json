@@ -1,0 +1,26 @@
+{
+  "tid_1": {
+    "number_of_executions": 1,
+    "dependency": [],
+    "execution_strategy": "sequential",
+    "init": ["jid_123", "jid_456"]
+  },
+  "tid_123": {
+    "number_of_executions": 1,
+    "dependency": [],
+    "execution_strategy": "sequential",
+    "init": []
+  },
+  "tid_456": {
+    "number_of_executions": 2,
+    "dependency": [],
+    "execution_strategy": "parallel",
+    "init": []
+  },
+  "tid_789": {
+    "number_of_executions": 1,
+    "dependency": ["jid_123", "jid_456"],
+    "execution_strategy": "sequential",
+    "init": []
+  }
+}
