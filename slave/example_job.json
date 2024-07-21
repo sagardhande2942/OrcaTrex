@@ -5,5 +5,23 @@
     "args": ["-m", "something", "otherthing"],
     "environment": "~/test_env/bin/activate"
     "init_job": true
+  },
+  "tid_123": {
+    "command": "python3",
+    "args": ["-m", "something", "otherthing"],
+    "environment": "~/test_env/bin/activate"
+    "init_job": false
+  },
+  "tid_456": {
+    "command": "python3",
+    "args": ["-m", "something", "otherthing"],
+    "environment": "~/test_env/bin/activate"
+    "init_job": false
+  },
+  "tid_789": {
+    "command": "python3",
+    "args": ["-m", "something", "otherthing"],
+    "environment": "~/test_env/bin/activate"
+    "init_job": false
   }
 }

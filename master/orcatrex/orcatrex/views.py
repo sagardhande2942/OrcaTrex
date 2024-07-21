@@ -1,3 +1,5 @@
+import dataclasses
+
 from django.http import HttpResponse
 from django.views import View
 from job_alerter import JobAlerter
@@ -14,6 +16,7 @@ from job_distributor import JobDistributor
 3. Reset Slave cpu and mem usage if inactive (PQ)
 """
 
+SLAVE_DATA = []
 
 class GetJobs(View):
   jdata: str
@@ -25,13 +28,38 @@ class GetJobs(View):
     return HttpResponse(status=200)
 
 
-# TODO(sdhande): Store the slave data in global SlaveData var.
-# TODO(sdhande): Add utility to dump Slave Data to json file for recovering from crashes.
 class SlaveAdder(View):
 
   # @Arsenalist Only Method
   def post(self, request):
-    ...
+    global SLAVE_DATA
+    username = request.POST.get("username")  
+    hostname = request.POST.get("hostname")
+    active = True if request.POST.get("active").lower() == "true" else False
+    SLAVE_DATA.append(Slave(username, hostname, active))
+
+
+class SlaveDumper(View):
+
+  def get(self, request):
+    dump_dict = {}
+    for slave in SLAVE_DATA:
+      dump_dict[slave.hostname] = dataclasses.asdict(slave)
+
+    dump_path = pathlib.Path(f"/home/ubuntu/slave_dump/dump.json")
+    dump_path.parent.mkdir(exist_ok=True)
+    dump_path.write_text(json.dumps(dump_dict))
+
+class SlaveLoader(View):
+  global slave_data
+
+  def get(self, request):
+    dump_str = pathlib.Path("/home/ubuntu/slave_dump/dump.json").read_text()
+    dump_dict = json.loads(dump_str)
+    slave_hostnames = [slave.hostname for slave in SLAVE_DATA]
+    for hostname, slave in dump_dict:
+      if hostname not in slave_hostnames:
+        SLAVE_DATA.append(Slave(**slave))
 
 
 # TODO(sdhande): Need a priority queue implementation for getting the idle CPU for job execution

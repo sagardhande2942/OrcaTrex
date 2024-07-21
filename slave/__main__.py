@@ -6,8 +6,9 @@ import argparse
 import pathlib
 import time
 
-from job_checker import Fnotifier
 from job_handler import JobHandler
+
+from utils.fnotifier import Fnotifier
 
 
 def _parse_args():
@@ -26,7 +27,7 @@ def _main():
     if fnotifier.change_checker():
       handler = JobHandler(args["job_file"], args["exec_file"])
       running_jobs.append(handler)
-      handler.start_jobs()
+      handler.start()
 
     completed_jobs = [job for job in running_jobs if job.complete()]
     running_jobs = [job for job in running_jobs if not job.complete()]
