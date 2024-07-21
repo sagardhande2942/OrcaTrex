@@ -25,6 +25,7 @@ class GetJobs(View):
   def post(self, request):
     self.jdata = request.POST.get("jfile")
     self.edata = request.POST.get("efile")
+    self.sync_code = True if request.POST.get("sync_code").lower == "true" else False
     return HttpResponse(status=200)
 
 

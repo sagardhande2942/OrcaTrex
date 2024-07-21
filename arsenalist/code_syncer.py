@@ -1,7 +1,18 @@
-# TODO(sdhande): Create a code syncer for Arsenalist where it is assumed that there is updated code once he sends job. The master auto picks the code dir from account info
-# Maybe after job sender runs, it tars the code dir and keeps it in account data dir
-# Master will sync this file then scp it to slave. We can keep another instance of fnotifier in the slave, which will reda if a tar file comes in. If it does,
-# the slave can extract it and replace the code base.
-# Save code with file name <job_id>.tar.gz
+import tarfile
 
+FILES_REGEX = [
+  "abc/exec_*.py",
+  "utils/*.py",
+  "execptions/main.py"
+]
+
+
+def sync(tar_path: pathlib.Path = pathlib.Path("<home>/tmp/code_base.tar")):
+
+  with tarfile.open(tar_path, "a") as tar:
+    for regex in FILES_REGEX:
+      for file in pathlib.Path("your/path/till/project/base/").glob(regex):
+        tar.add(file, arcname=file.name)
+
+  return tar_path
 
