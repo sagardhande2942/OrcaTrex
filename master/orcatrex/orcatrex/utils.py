@@ -43,11 +43,6 @@ class Slave:
   is_gcloud: bool = False
 
 
-"""
-To be run after code sync from api endpoint under job_id folder
-"""
-
-
 def slave_job_executor(slave, job_data):
   if slave.is_gcloud:
     server_obj = GCloudUtility(slave.hostname)
@@ -59,6 +54,11 @@ def slave_job_executor(slave, job_data):
   docker.start_docker_image()
   output = docker.run_docker_command(job_data["command"])
   return output
+
+
+"""
+To be run after code sync from api endpoint under job_id folder
+"""
 
 
 def execute_jobs(slave_data, slave_pq, job_data):
