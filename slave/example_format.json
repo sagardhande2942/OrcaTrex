@@ -17,6 +17,6 @@
     "init": ["jid_789"] 
   },
   "tid_789": {
-    "dependency": ["jid_123", "jid_456"],
+    "dependency": ["jid_123", "jid_456"]
   }
 }

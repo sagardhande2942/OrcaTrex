@@ -1,9 +1,7 @@
-import dataclasses
-
-from django.http import HttpResponse
 from django.views import View
 from job_alerter import JobAlerter
 from job_distributor import JobDistributor
+from orcatrex.utils import PriorityQueue
 
 # TODO(sdhande): Need global variables to store current job data, slave data (get from SlaveAdder), Arsenalist data(username), slave health, PQ for slave CPU & Mem
 # TODO(sdhande): Need a daemon thread here for executing JobDistributor in background with global vars
@@ -17,6 +15,8 @@ from job_distributor import JobDistributor
 """
 
 SLAVE_DATA = []
+SLAVE_PQ = PriorityQueue()
+
 
 class GetJobs(View):
   jdata: str
@@ -34,7 +34,7 @@ class SlaveAdder(View):
   # @Arsenalist Only Method
   def post(self, request):
     global SLAVE_DATA
-    username = request.POST.get("username")  
+    username = request.POST.get("username")
     hostname = request.POST.get("hostname")
     active = True if request.POST.get("active").lower() == "true" else False
     SLAVE_DATA.append(Slave(username, hostname, active))
@@ -50,6 +50,7 @@ class SlaveDumper(View):
     dump_path = pathlib.Path(f"/home/ubuntu/slave_dump/dump.json")
     dump_path.parent.mkdir(exist_ok=True)
     dump_path.write_text(json.dumps(dump_dict))
+
 
 class SlaveLoader(View):
   global slave_data

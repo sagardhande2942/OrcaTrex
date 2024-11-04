@@ -25,3 +25,16 @@
     "init_job": false
   }
 }
+
+
+"""
+If you think about it, the only things needed for job execution in initial version should be 
+the files to copy and the command to execute.
+
+
+How do you get the files to copy, you hit the api with the following json
+{
+  "files": ["list of regex of files to be changed", "relative to the base repo"],
+  "command": "command to execute"
+}
+"""
