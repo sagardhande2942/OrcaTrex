@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from typing import *
 
+from django.forms.models import model_to_dict
 from orcatrex.gcloud_utils import DockerUtility, GCloudUtility, ServerUtility
+from orcatrex.models import ModelSlave
 
 
 class PQError(Exception):
@@ -43,6 +45,14 @@ class Slave:
   is_gcloud: bool = False
 
 
+def get_slave_data():
+  slaves = ModelSlave().objects.all().filter(active__exact=True)
+  data = {}
+  for slave in slaves:
+    data[slave.hostname] = model_to_dict(slave)
+  return data
+
+
 def slave_job_executor(slave, job_data):
   if slave.is_gcloud:
     server_obj = GCloudUtility(slave.hostname)
@@ -63,11 +73,9 @@ To be run after code sync from api endpoint under job_id folder
 
 def execute_jobs(slave_data, slave_pq, job_data):
   best_slave = slave_pq.get()
-
   # Currently keep only 1 ongoing execution per slave
   if not best_slave or slave_data[best_slave].number_of_existing_executions > 0:
     raise NoSlaveException("No healthy slave currently available")
-
   return slave_job_executor(slave_data[best_slave], job_data)
 
 

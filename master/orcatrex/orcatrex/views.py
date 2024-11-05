@@ -1,7 +1,7 @@
 from django.views import View
-from job_alerter import JobAlerter
-from job_distributor import JobDistributor
-from orcatrex.utils import PriorityQueue
+from orcatrex.job_alerter import JobAlerter
+from orcatrex.job_distributor import JobDistributor
+from orcatrex.utils import PriorityQueue, get_slave_data
 
 # TODO(sdhande): Need global variables to store current job data, slave data (get from SlaveAdder), Arsenalist data(username), slave health, PQ for slave CPU & Mem
 # TODO(sdhande): Need a daemon thread here for executing JobDistributor in background with global vars
@@ -14,7 +14,7 @@ from orcatrex.utils import PriorityQueue
 3. Reset Slave cpu and mem usage if inactive (PQ)
 """
 
-SLAVE_DATA = []
+SLAVE_DATA = get_slave_data()
 SLAVE_PQ = PriorityQueue()
 
 
