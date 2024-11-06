@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 """Module contains Arsenalist and Slave class for master purpose"""
+import pathlib
+import shutil
 from dataclasses import dataclass
 from typing import *
 
 from django.forms.models import model_to_dict
 from orcatrex.gcloud_utils import DockerUtility, GCloudUtility, ServerUtility
-from orcatrex.models import ModelSlave
+from orcatrex.models import Slave as ModelSlave
 
 
 class PQError(Exception):
@@ -69,6 +71,24 @@ def slave_job_executor(slave, job_data):
 """
 To be run after code sync from api endpoint under job_id folder
 """
+
+
+def copy_project_dirs(base, new_dir):
+  required_dirs = ["ors", "rms", "strategies", "trade_python", "mock_server/utils"]
+  required_files = [("mock_server", "mock_server/*.py")]
+  makedirs = ["mock_server", "mock_server/chart_data", "mock_server/test_logs", "mock_server/test_statistics"]
+  new_dir = base / "temp" / new_dir
+  for name in makedirs:
+    path = new_dir / name
+    path.mkdir(parents=True, exist_ok=True)
+
+  for dir_name in required_dirs:
+    dir_path = base / dir_name
+    shutil.copytree(dir_path, new_dir / dir_name)
+
+  for dir_name, files in required_files:
+    for file in base.glob(files):
+      shutil.copy(file, new_dir / dir_name)
 
 
 def execute_jobs(slave_data, slave_pq, job_data):
