@@ -34,6 +34,17 @@ class GCloudUtility:
     output = self.run_command(command)
     return output
 
+  def scp(self, src, dest):
+    try:
+      final_command = f'gcloud cloud-shell scp localhost:{src} cloudshell:{dest}'
+      result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+      return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+      print(f"Error running command: {e}")
+      print(f"Output: {e.output}")
+      print(f"Error: {e.stderr}")
+      return None
+
 
 class ServerUtility:
 
@@ -44,6 +55,17 @@ class ServerUtility:
     """Runs a gcloud command and returns the output."""
     try:
       final_command = f'ssh self.hostname "{command}"'
+      result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+      return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+      print(f"Error running command: {e}")
+      print(f"Output: {e.output}")
+      print(f"Error: {e.stderr}")
+      return None
+
+  def scp(self, src, dest):
+    try:
+      final_command = f'scp localhost:{src} {self.hostname}:{dest}'
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
     except subprocess.CalledProcessError as e:
@@ -63,11 +85,24 @@ class DockerUtility:
   def set_image(self, image):
     self.image = image
 
+  def copy_files_to_container(self, src, dest):
+    try:
+      if not self.image or not self.container_id:
+        raise ValueError("image/container for the docker is not set")
+      final_command = f"docker cp {src} {self.container_id}:{dest}"
+      result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+      return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+      print(f"Error running command: {e}")
+      print(f"Output: {e.output}")
+      print(f"Error: {e.stderr}")
+      return None
+
   # TODO(sdhande): Add feature to check if image is already loaded
   def load_docker_image(self):
     """Loads a Docker image into the remote machine."""
     if not self.image:
-      raise ValueError("Image for the docker container is not set")
+      raise ValueError("image for the docker container is not set")
     try:
       command = f'docker load -i {self.image}'
       output = self.server.run_command(command)

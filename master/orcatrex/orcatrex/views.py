@@ -17,10 +17,9 @@ class GetJobs(View):
 
   def post(self, request):
     self.command = request.POST.get("command")
-    self.files = request.POST.get("files")
-    new_dir_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    self.dir_name = request.POST.get("dir")
     trade = pathlib.Path("/home/tradeai/")
-    copy_project_dirs(base=trade, new_dir=new_dir_name)
+
     # Need to sync code
     return HttpResponse(status=200)
 
