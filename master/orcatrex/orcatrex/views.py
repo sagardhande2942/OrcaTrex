@@ -1,5 +1,6 @@
 import datetime
 import pathlib
+import threading
 from collections import deque
 
 from django.forms.models import model_to_dict
@@ -7,11 +8,17 @@ from django.http import HttpResponse
 from django.views import View
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (PriorityQueue, execute_jobs, get_best_slave, get_jobs_data, get_slave_data)
+from orcatrex.utils import (PriorityQueue, check_job_queue, execute_jobs, get_best_slave, get_jobs_data, get_slave_data,
+                            run_in_background)
 
 SLAVE_DATA = get_slave_data()
 SLAVE_PQ = PriorityQueue()
 JOBS_Q = get_jobs_data()
+
+# Background job queue checker
+job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10))
+job_queue_executor.daemon = True
+job_queue_executor.start()
 
 
 class GetJobs(View):
@@ -27,9 +34,11 @@ class GetJobs(View):
     if not best_slave:
       JOBS_Q.append(job_data)
       return HttpResponse(status=420)
+    SLAVE_DATA[best_slave].number_of_executions += 1
     execute_jobs(best_slave, job_data)
     job_update = Jobs._default_manager.objects.get(id=job_data.id)
     job_update.update(pending=False)
+    SLAVE_DATA[best_slave]["number_of_existing_executions"] -= 1
     return HttpResponse(status=200)
 
 
@@ -45,10 +54,3 @@ class SlaveAdder(View):
     new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud)
     new_slave.save()
     SLAVE_DATA[new_slave.hostname] = model_to_dict(new_slave)
-
-
-class HealthChecker(View):
-
-  # Takes in the heart beat from slaves which contains data about CPU and Memonry usage
-  def post(self, request):
-    ...
