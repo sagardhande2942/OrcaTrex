@@ -1,14 +1,17 @@
 import datetime
 import pathlib
+from collections import deque
 
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from django.views import View
+from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import PriorityQueue, copy_project_dirs, get_slave_data
+from orcatrex.utils import (PriorityQueue, execute_jobs, get_best_slave, get_jobs_data, get_slave_data)
 
 SLAVE_DATA = get_slave_data()
 SLAVE_PQ = PriorityQueue()
+JOBS_Q = get_jobs_data()
 
 
 class GetJobs(View):
@@ -18,9 +21,15 @@ class GetJobs(View):
   def post(self, request):
     self.command = request.POST.get("command")
     self.dir_name = request.POST.get("dir")
-    trade = pathlib.Path("/home/tradeai/")
-
-    # Need to sync code
+    best_slave = get_best_slave(SLAVE_DATA, SLAVE_PQ)
+    job_data = Jobs(command=self.command, dir_name=self.dir_name)
+    job_data.save()
+    if not best_slave:
+      JOBS_Q.append(job_data)
+      return HttpResponse(status=420)
+    execute_jobs(best_slave, job_data)
+    job_update = Jobs._default_manager.objects.get(id=job_data.id)
+    job_update.update(pending=False)
     return HttpResponse(status=200)
 
 

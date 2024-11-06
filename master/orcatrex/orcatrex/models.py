@@ -10,3 +10,10 @@ class Slave(models.Model):
   free_mem = models.FloatField(default=0, help_text="Free mem available on the server")
   number_of_executions = models.IntegerField(default=0, help_text="Ongoing number of executions on the server")
   is_glcoud = models.BooleanField(default=False, help_text="Whether the server is a gcloud server")
+
+
+class Jobs(models.Model):
+  command = models.CharField(max_length=200, help_text="Command to be executed")
+  dir_name = models.CharField(max_length=200, help_text="Dir name of updated files")
+  status = models.TextChoices("Completed", "Pending", "Running", default="Pending", help_text="Is Job still pending?")
+  created_at = models.DateTimeField(auto_now_add=True)

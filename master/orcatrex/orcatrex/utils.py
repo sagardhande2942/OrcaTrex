@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 """Module contains Arsenalist and Slave class for master purpose"""
-import pathlib
-import shutil
+from collections import deque
 from dataclasses import dataclass
 from typing import *
 
 from django.forms.models import model_to_dict
 from orcatrex.gcloud_utils import DockerUtility, GCloudUtility, ServerUtility
+from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
 
 
@@ -48,11 +48,19 @@ class Slave:
 
 
 def get_slave_data():
-  slaves = ModelSlave().objects.all().filter(active__exact=True)
+  slaves = ModelSlave._default_manager.all().filter(active=True)
   data = {}
   for slave in slaves:
     data[slave.hostname] = model_to_dict(slave)
   return data
+
+
+def get_jobs_data():
+  jobs = Jobs._default_manager.order_by("-created_at").all().filter(pending=True)
+  jobs_q = deque()
+  for job in jobs:
+    jobs_q.append(model_to_dict(job))
+  return jobs_q
 
 
 def slave_job_executor(slave, job_data):
@@ -73,30 +81,16 @@ To be run after code sync from api endpoint under job_id folder
 """
 
 
-def copy_project_dirs(base, new_dir):
-  required_dirs = ["ors", "rms", "strategies", "trade_python", "mock_server/utils"]
-  required_files = [("mock_server", "mock_server/*.py")]
-  makedirs = ["mock_server", "mock_server/chart_data", "mock_server/test_logs", "mock_server/test_statistics"]
-  new_dir = base / "temp" / new_dir
-  for name in makedirs:
-    path = new_dir / name
-    path.mkdir(parents=True, exist_ok=True)
-
-  for dir_name in required_dirs:
-    dir_path = base / dir_name
-    shutil.copytree(dir_path, new_dir / dir_name)
-
-  for dir_name, files in required_files:
-    for file in base.glob(files):
-      shutil.copy(file, new_dir / dir_name)
-
-
-def execute_jobs(slave_data, slave_pq, job_data):
+def get_best_slave(slave_data, slave_pq):
   best_slave = slave_pq.get()
-  # Currently keep only 1 ongoing execution per slave
   if not best_slave or slave_data[best_slave].number_of_existing_executions > 0:
-    raise NoSlaveException("No healthy slave currently available")
-  return slave_job_executor(slave_data[best_slave], job_data)
+    return None
+  return slave_data[best_slave]
+
+
+def execute_jobs(slave, job_data):
+  # Currently keep only 1 ongoing execution per slave
+  return slave_job_executor(slave, job_data)
 
 
 class CpuData(NamedTuple):
