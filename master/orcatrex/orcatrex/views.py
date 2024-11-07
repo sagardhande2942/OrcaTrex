@@ -5,6 +5,7 @@ from collections import deque
 
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from orcatrex.models import Jobs
@@ -26,7 +27,7 @@ class GetJobs(View):
   command: str
   files: list[str]
 
-  @csrf_exempt
+  @method_decorator(csrf_exempt)
   def post(self, request):
     self.command = request.POST.get("command")
     self.dir_name = request.POST.get("dir")
@@ -49,7 +50,7 @@ class GetJobs(View):
 class SlaveAdder(View):
 
   # @Arsenalist Only Method
-  @csrf_exempt
+  @method_decorator(csrf_exempt)
   def post(self, request):
     global SLAVE_DATA
     username = request.POST.get("username")
