@@ -1,3 +1,3 @@
-django==5.0.5
+django
 requests==2.32.3
 gcloud==0.18.3

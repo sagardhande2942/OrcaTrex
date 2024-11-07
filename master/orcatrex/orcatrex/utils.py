@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 """Module contains Arsenalist and Slave class for master purpose"""
+from __future__ import annotations
 import os
 import pathlib
 import time
 from collections import deque
 from dataclasses import dataclass
 from typing import *
-
 from django.forms.models import model_to_dict
 from orcatrex.gcloud_utils import DockerUtility, GCloudUtility, ServerUtility
 from orcatrex.models import Jobs
