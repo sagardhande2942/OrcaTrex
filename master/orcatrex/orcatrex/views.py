@@ -22,11 +22,11 @@ job_queue_executor.daemon = True
 job_queue_executor.start()
 
 
-@csrf_exempt
 class GetJobs(View):
   command: str
   files: list[str]
 
+  @csrf_exempt
   def post(self, request):
     self.command = request.POST.get("command")
     self.dir_name = request.POST.get("dir")
@@ -46,10 +46,10 @@ class GetJobs(View):
     return HttpResponse(status=200)
 
 
-@csrf_exempt
 class SlaveAdder(View):
 
   # @Arsenalist Only Method
+  @csrf_exempt
   def post(self, request):
     global SLAVE_DATA
     username = request.POST.get("username")
