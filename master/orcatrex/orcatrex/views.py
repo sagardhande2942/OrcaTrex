@@ -62,6 +62,7 @@ class SlaveAdder(APIView):
     new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud)
     new_slave.save()
 
+    SLAVE_PQ.add(model_to_dict(new_slave))
     SLAVE_DATA[new_slave.hostname] = model_to_dict(new_slave)
 
     return Response(status=200)
