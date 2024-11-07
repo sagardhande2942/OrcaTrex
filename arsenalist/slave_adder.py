@@ -10,8 +10,8 @@ import requests
 def _parse_args():
   """Argparser function"""
   parser = argparse.ArgumentParser(description="Entrypoint in job sender")
-  parser.add_argument("-active", type=bool, action="store_true", help="Whether the slave is active initially", default=True)
-  parser.add_argument("-gcloud", type=bool, action="store_true", help="Whether the slave is gcloud", default=True)
+  parser.add_argument("-active", action="store_true", help="Whether the slave is active initially", default=True)
+  parser.add_argument("-gcloud", action="store_true", help="Whether the slave is gcloud", default=True)
   parser.add_argument("--slave_account", type=str, help="Account name of the slave", default="cloudshell")
   parser.add_argument("--slave_id", type=str, help="Account ip in case of normal linux. Email in case of GCP", required=True)
   parser.add_argument("--master_ip", type=str, help="IP of the master")

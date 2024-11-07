@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import pathlib
 
 import code_syncer
-import paramiko
 import requests
 
 
@@ -31,7 +29,7 @@ def _parse_args():
 #  sftp.put(tar_path, f"/home/{username}/tmp/codebase.tar")
 
 
-def send_jobs(ip: str, port: str, files: list[str], command: str):
+def send_jobs(ip: str, username: str, port: str, files: list[str], command: str):
   """ Sends job to the master server endpoint
 
   Args:
@@ -41,7 +39,7 @@ def send_jobs(ip: str, port: str, files: list[str], command: str):
     command (str): Command to be executed
   """
   dir_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-  code_syncer.execute_remote(f"mkdir -p /home/tradeai/temp/{dir_name}")
+  code_syncer.execute_remote(ip, username, f"mkdir -p /home/tradeai/temp/{dir_name}")
   code_syncer.sync(user="tradeai", hostname=ip, files=files, dir_name=dir_name)
   requests.post(f"http://{ip}:{port}/orcatrex/send_job", data={"files": files, "command": command})
 
@@ -49,7 +47,7 @@ def send_jobs(ip: str, port: str, files: list[str], command: str):
 def _main():
   """Entrypoint to module"""
   args = _parse_args()
-  send_jobs(args["master_ip"], args["master_port"], args["files"], args["command"])
+  send_jobs(args["master_ip"], args["master_username"], args["master_port"], args["files"], args["command"])
 
 
 if __name__ == "__main__":
