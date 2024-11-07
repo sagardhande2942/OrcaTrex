@@ -48,7 +48,7 @@ class Slave:
   cpu: float | None = None
   used_mem: float | None = None
   free_mem: float | None = None
-  number_of_existing_executions: int = 0
+  number_of_executions: int = 0
   is_gcloud: bool = False
 
 
@@ -119,7 +119,7 @@ To be run after code sync from api endpoint under job_id folder
 
 def get_best_slave(slave_data, slave_pq):
   best_slave = slave_pq.get()
-  if not best_slave or slave_data[best_slave]["number_of_existing_executions"] > 0:
+  if not best_slave or slave_data[best_slave]["number_of_executions"] > 0:
     return None
   return slave_data[best_slave]
 
@@ -132,7 +132,7 @@ def execute_jobs(slave, job_data):
 # Recurring function to execute pending jobs when slaves are available
 def check_job_queue(slave_data, slave_pq, job_q: deque):
   best_slave = slave_pq.get()
-  if not best_slave or slave_data[best_slave]["number_of_existing_executions"] > 0:
+  if not best_slave or slave_data[best_slave]["number_of_executions"] > 0:
     return
   job_data = job_q.popleft()
   execute_jobs(slave_data[best_slave], job_data)
@@ -142,7 +142,7 @@ class CpuData(NamedTuple):
   cpu: float
   used_mem: float
   free_mem: float
-  number_of_existing_executions: int = 0
+  number_of_executions: int = 0
 
 
 class PriorityQueue(object):
@@ -175,9 +175,9 @@ class PriorityQueue(object):
 
     min_key, min_value = 10**9, 10**9
     for key, value in self.queue.items():
-      if value["number_of_existing_executions"] < min_value:
+      if value["number_of_executions"] < min_value:
         min_key = key
-        min_value = value["number_of_existing_executions"]
+        min_value = value["number_of_executions"]
 
     return min_key if min_key != 10**9 else None
 
