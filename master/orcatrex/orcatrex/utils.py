@@ -179,7 +179,7 @@ class PriorityQueue(object):
         min_key = key
         min_value = value["number_of_existing_executions"]
 
-    return min_key
+    return min_key if min_key != 10**9 else None
 
   # for popping an element based on Priority
   def delete(self) -> CpuData:
