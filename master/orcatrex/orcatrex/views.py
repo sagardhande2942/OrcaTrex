@@ -1,5 +1,3 @@
-import datetime
-import pathlib
 import threading
 from collections import deque
 
@@ -41,7 +39,6 @@ class GetJobs(View):
     SLAVE_DATA[best_slave]["number_of_existing_executions"] -= 1
     job_update = Jobs.objects.get(id=job_data.id)
     job_update.update(status="Completed")
-
     return HttpResponse(status=200)
 
 
@@ -54,6 +51,9 @@ class SlaveAdder(View):
     hostname = request.POST.get("hostname")
     active = request.POST.get("active", False)
     is_gcloud = request.POST.get("is_gcloud", False)
+    if not username and not active:
+      return HttpResponse(content=b"Username/hostname not provided", status=420)
     new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud)
     new_slave.save()
     SLAVE_DATA[new_slave.hostname] = model_to_dict(new_slave)
+    return HttpResponse(status=200)
