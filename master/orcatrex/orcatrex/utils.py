@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 """Module contains Arsenalist and Slave class for master purpose"""
+from __future__ import annotations
+
 import os
 import pathlib
 import time
