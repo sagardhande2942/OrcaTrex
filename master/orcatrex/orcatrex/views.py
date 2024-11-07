@@ -4,6 +4,7 @@ from collections import deque
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
 from orcatrex.utils import (PriorityQueue, check_job_queue, copy_to_server, execute_jobs, get_best_slave, get_jobs_data,
@@ -19,6 +20,7 @@ job_queue_executor.daemon = True
 job_queue_executor.start()
 
 
+@csrf_exempt
 class GetJobs(View):
   command: str
   files: list[str]
@@ -42,6 +44,7 @@ class GetJobs(View):
     return HttpResponse(status=200)
 
 
+@csrf_exempt
 class SlaveAdder(View):
 
   # @Arsenalist Only Method
