@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 """Module contains Arsenalist and Slave class for master purpose"""
-from __future__ import annotations
 import os
 import pathlib
 import time
 from collections import deque
 from dataclasses import dataclass
 from typing import *
+
 from django.forms.models import model_to_dict
 from orcatrex.gcloud_utils import DockerUtility, GCloudUtility, ServerUtility
 from orcatrex.models import Jobs
@@ -66,10 +66,10 @@ def get_jobs_data():
   return jobs_q
 
 
-def run_in_background(func, freq):
+def run_in_background(func, freq, *args, **kwargs):
   while True:
     time.sleep(freq)
-    func()
+    func(*args, **kwargs)
 
 
 def slave_job_executor(slave, job_data):

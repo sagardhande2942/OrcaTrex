@@ -14,7 +14,7 @@ SLAVE_PQ = PriorityQueue()
 JOBS_Q = get_jobs_data()
 
 # Background job queue checker
-job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10))
+job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10, SLAVE_DATA, SLAVE_PQ, JOBS_Q))
 job_queue_executor.daemon = True
 job_queue_executor.start()
 
@@ -51,7 +51,7 @@ class SlaveAdder(View):
     hostname = request.POST.get("hostname")
     active = request.POST.get("active", False)
     is_gcloud = request.POST.get("is_gcloud", False)
-    if not username and not active:
+    if not username and not hostname:
       return HttpResponse(content=b"Username/hostname not provided", status=420)
     new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud)
     new_slave.save()
