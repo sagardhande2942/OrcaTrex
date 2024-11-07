@@ -41,7 +41,8 @@ def send_jobs(ip: str, username: str, port: str, files: list[str], command: str)
   dir_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
   code_syncer.execute_remote(ip, username, f"mkdir -p /home/tradeai/temp/{dir_name}")
   code_syncer.sync(user="tradeai", hostname=ip, files=files, dir_name=dir_name)
-  requests.post(f"http://{ip}:{port}/orcatrex/send_job", data={"files": files, "command": command})
+  result = requests.post(f"http://{ip}:{port}/orcatrex/send_job", data={"dir": dir_name, "command": command})
+  print(result.text)
 
 
 def _main():

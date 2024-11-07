@@ -161,8 +161,8 @@ class PriorityQueue(object):
     return key in self.queue
 
   # for inserting an element in the queue
-  def add(self, data_id, cpu, used_mem, free_mem):
-    self.queue[data_id] = CpuData(cpu, used_mem, free_mem)
+  def add(self, data):
+    self.queue[data["hostname"]] = data
 
   def update(self, data_id, cpu, used_mem, free_mem):
     if data_id not in self.queue:
