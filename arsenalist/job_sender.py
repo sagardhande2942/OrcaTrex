@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import pathlib
 
 import code_syncer
@@ -14,45 +15,41 @@ import requests
 def _parse_args():
   """Argparser function"""
   parser = argparse.ArgumentParser(description="Entrypoint in job sender")
-  parser.add_argument("--job_file", type=pathlib.Path, help="Path to the job file")
-  parser.add_argument("--exec_file", type=pathlib.Path, help="Path to the execution format file")
+  parser.add_argument("--files", nargs="+", default=[], help="File regex to sync")
+  parser.add_argument("--command", help="Command to be executed")
   parser.add_argument("--master_username", type=str, help="Username of the master for scp")
   parser.add_argument("--master_ip", type=str, help="IP of the master")
   parser.add_argument("--master_port", type=str, help="Port of the master")
-  parser.add_arggument("-sync_code", action="store_true", help="Whether you want your code to be synced for this job")
   return vars(parser.parse_args())
 
 
-def send_codebase(ip: str, username: str, tar_path: pathlib.Path):
-  client = paramiko.SSHClient()
-  client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-  client.connect(ip, username)
-  sftp = client.open_sftp()
-  sftp.put(tar_path, f"/home/{username}/tmp/codebase.tar")
+#def send_codebase(ip: str, username: str, tar_path: pathlib.Path):
+#  client = paramiko.SSHClient()
+#  client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#  client.connect(ip, username=username)
+#  sftp = client.open_sftp()
+#  sftp.put(tar_path, f"/home/{username}/tmp/codebase.tar")
 
 
-def send_jobs(ip: str, port: str, sync_code: bool, jfile: pathlib.Path, efile: pathlib.Path):
+def send_jobs(ip: str, port: str, files: list[str], command: str):
   """ Sends job to the master server endpoint
 
   Args:
     ip (str): Ip of the master server
     port (str): Port of the master server
-    sync_code (bool): Whether we are syncing code base for this job
-    jfile (str): Path to the job file
-    efile (str): Path to the job file
+    files (str): Files to sync
+    command (str): Command to be executed
   """
-  jdata = jfile.read_text()
-  edata = efile.read_text()
-  requests.post(f"http://{ip}:{port}/orcatrex/send_job", data={"jdata": jdata, "edata": edata, "sync_code": sync_code})
+  dir_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+  code_syncer.execute_remote(f"mkdir -p /home/tradeai/temp/{dir_name}")
+  code_syncer.sync(user="tradeai", hostname=ip, files=files, dir_name=dir_name)
+  requests.post(f"http://{ip}:{port}/orcatrex/send_job", data={"files": files, "command": command})
 
 
 def _main():
   """Entrypoint to module"""
   args = _parse_args()
-  if args["sync_code"]:
-    tar_path = code_syncer.sync()    
-    send_codebase(args["master_ip"], args["master_username"], tar_path)
-  send_jobs(args["master_ip"], args["master_port"], args["sync_code"], args["job_file"], args["exec_file"])
+  send_jobs(args["master_ip"], args["master_port"], args["files"], args["command"])
 
 
 if __name__ == "__main__":

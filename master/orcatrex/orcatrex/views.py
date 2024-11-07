@@ -8,8 +8,8 @@ from django.http import HttpResponse
 from django.views import View
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (PriorityQueue, check_job_queue, execute_jobs, get_best_slave, get_jobs_data, get_slave_data,
-                            run_in_background)
+from orcatrex.utils import (PriorityQueue, check_job_queue, copy_to_server, execute_jobs, get_best_slave, get_jobs_data,
+                            get_slave_data, run_in_background)
 
 SLAVE_DATA = get_slave_data()
 SLAVE_PQ = PriorityQueue()
@@ -34,9 +34,9 @@ class GetJobs(View):
     if not best_slave:
       JOBS_Q.append(job_data)
       return HttpResponse(status=420)
-    SLAVE_DATA[best_slave].number_of_executions += 1
-    execute_jobs(best_slave, job_data)
-    job_update = Jobs._default_manager.objects.get(id=job_data.id)
+    SLAVE_DATA[best_slave]["number_of_existing_executions"] += 1
+    execute_jobs(best_slave, model_to_dict(job_data))
+    job_update = Jobs.objects.get(id=job_data.id)
     job_update.update(pending=False)
     SLAVE_DATA[best_slave]["number_of_existing_executions"] -= 1
     return HttpResponse(status=200)

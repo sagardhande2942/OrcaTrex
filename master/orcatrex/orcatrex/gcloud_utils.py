@@ -98,6 +98,19 @@ class DockerUtility:
       print(f"Error: {e.stderr}")
       return None
 
+  def kill_all_containers(self):
+    try:
+      if not self.image or not self.container_id:
+        raise ValueError("image/container for the docker is not set")
+      final_command = f"docker kill $(docker ps -q)"
+      result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+      return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+      print(f"Error running command: {e}")
+      print(f"Output: {e.output}")
+      print(f"Error: {e.stderr}")
+      return None
+
   # TODO(sdhande): Add feature to check if image is already loaded
   def load_docker_image(self):
     """Loads a Docker image into the remote machine."""
@@ -111,6 +124,13 @@ class DockerUtility:
       print(f"Error loading Docker image: {e}")
       return None
 
+  def check_if_container_up(self):
+    if not self.image:
+      raise ValueError("Image for the docker container is not set")
+    command = "docker ps"
+    result = self.server.run_command(command)
+    return len(result.split("\n")) >= 2
+
   def start_docker_image(self):
     """Starts a Docker image if it's not already running and returns the container ID."""
     if not self.image:
@@ -120,6 +140,8 @@ class DockerUtility:
       if container_id:
         return f"Container '{container_id}' is already running."
       else:
+        if self.check_if_container_up():
+          return
         start_command = f'docker run -d {self.image}'
         result = self.server.run_command(start_command)
         self.container_id = result.strip()

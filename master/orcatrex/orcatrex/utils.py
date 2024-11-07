@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 """Module contains Arsenalist and Slave class for master purpose"""
+import os
+import pathlib
+import time
 from collections import deque
 from dataclasses import dataclass
 from typing import *
@@ -48,7 +51,7 @@ class Slave:
 
 
 def get_slave_data():
-  slaves = ModelSlave._default_manager.all().filter(active=True)
+  slaves = ModelSlave.objects.all().filter(active=True)
   data = {}
   for slave in slaves:
     data[slave.hostname] = model_to_dict(slave)
@@ -56,24 +59,55 @@ def get_slave_data():
 
 
 def get_jobs_data():
-  jobs = Jobs._default_manager.order_by("-created_at").all().filter(pending=True)
+  jobs = Jobs.objects.order_by("-created_at").all().filter(pending=True)
   jobs_q = deque()
   for job in jobs:
     jobs_q.append(model_to_dict(job))
   return jobs_q
 
 
+def run_in_background(func, freq):
+  while True:
+    time.sleep(freq)
+    func()
+
+
 def slave_job_executor(slave, job_data):
   if slave.is_gcloud:
-    server_obj = GCloudUtility(slave.hostname)
+    server_obj = GCloudUtility(slave["hostname"])
     server_obj.activate_gcloud_account()
   else:
-    server_obj = ServerUtility(slave.hostname)
+    server_obj = ServerUtility(slave["hostname"])
   docker = DockerUtility(server_obj)
+  docker.kill_all_containers()
   docker.load_docker_image()
   docker.start_docker_image()
+  copy_to_server(slave, job_data["dir_name"])
   output = docker.run_docker_command(job_data["command"])
   return output
+
+
+def walk_dir(files_list, path):
+  for root, dirs, files in os.walk(path):
+    files_list.extend(files)
+    for dir_name in dirs:
+      walk_dir(files_list, f"{path}/{dir_name}")
+
+
+def copy_to_server(slave, dir_name):
+  if slave.is_gcloud:
+    server_obj = GCloudUtility(slave["hostname"])
+    server_obj.activate_gcloud_account()
+  else:
+    server_obj = ServerUtility(slave["hostname"])
+
+  files_list = []
+  walk_dir(files_list, f"/home/tradeai/temp/{dir_name}")
+
+  for file in files_list:
+    temp_index = file.split("/").index("temp")
+    file_dest = "/home/tradeai/" + "/".join(file.split("/")[temp_index + 1:])
+    server_obj.scp(file, file_dest)
 
 
 """
@@ -83,7 +117,7 @@ To be run after code sync from api endpoint under job_id folder
 
 def get_best_slave(slave_data, slave_pq):
   best_slave = slave_pq.get()
-  if not best_slave or slave_data[best_slave].number_of_existing_executions > 0:
+  if not best_slave or slave_data[best_slave]["number_of_existing_executions"] > 0:
     return None
   return slave_data[best_slave]
 
@@ -91,6 +125,15 @@ def get_best_slave(slave_data, slave_pq):
 def execute_jobs(slave, job_data):
   # Currently keep only 1 ongoing execution per slave
   return slave_job_executor(slave, job_data)
+
+
+# Recurring function to execute pending jobs when slaves are available
+def check_job_queue(slave_data, slave_pq, job_q: deque):
+  best_slave = slave_pq.get()
+  if not best_slave or slave_data[best_slave]["number_of_existing_executions"] > 0:
+    return
+  job_data = job_q.popleft()
+  execute_jobs(slave_data[best_slave], job_data)
 
 
 class CpuData(NamedTuple):
@@ -130,9 +173,9 @@ class PriorityQueue(object):
 
     min_key, min_value = 10**9, 10**9
     for key, value in self.queue.items():
-      if value.number_of_existing_executions < min_value:
+      if value["number_of_existing_executions"] < min_value:
         min_key = key
-        min_value = value.number_of_existing_executions
+        min_value = value["number_of_existing_executions"]
 
     return min_key
 
@@ -142,9 +185,9 @@ class PriorityQueue(object):
       max_val = -1 * 100000
       max_key = None
       for key in self.queue:
-        if self.queue[key].cpu > 70 or (self.queue[key].used_mem / self.queue[key].free_mem) < 0.3:
+        if self.queue[key]["cpu"] > 70 or (self.queue[key]["used_mem"] / self.queue[key]["free_mem"]) < 0.3:
           continue
-        consumption = self.queue[key].cpu * (self.queue[key].used_mem / self.queue[key].free_mem)
+        consumption = self.queue[key]["cpu"] * (self.queue[key]["used_mem"] / self.queue[key]["free_mem"])
         if consumption > max_val:
           max_key = key
       item = self.queue[max_key]

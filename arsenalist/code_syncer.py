@@ -1,18 +1,14 @@
-import tarfile
+import subprocess
 
-FILES_REGEX = [
-  "abc/exec_*.py",
-  "utils/*.py",
-  "execptions/main.py"
-]
+FILES_REGEX = ["abc/exec_*.py", "utils/*.py", "execptions/main.py"]
 
 
-def sync(tar_path: pathlib.Path = pathlib.Path("<home>/tmp/code_base.tar")):
+def sync(user, hostname, files, dir_name):
+  command = f"""sshpass -pViS29@@@ rsync -a -m --include='{"' --include='".join(files)} ~/trad/ {user}@{hostname}:~/temp/"""
+  result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+  return result
 
-  with tarfile.open(tar_path, "a") as tar:
-    for regex in FILES_REGEX:
-      for file in pathlib.Path("your/path/till/project/base/").glob(regex):
-        tar.add(file, arcname=file.name)
 
-  return tar_path
-
+def execute_remote(command):
+  result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+  return result
