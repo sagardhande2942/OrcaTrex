@@ -9,7 +9,7 @@ class Slave(models.Model):
   used_mem = models.FloatField(default=0, help_text="Mem usage of the server")
   free_mem = models.FloatField(default=0, help_text="Free mem available on the server")
   number_of_executions = models.IntegerField(default=0, help_text="Ongoing number of executions on the server")
-  is_glcoud = models.BooleanField(default=False, help_text="Whether the server is a gcloud server")
+  is_gcloud = models.BooleanField(default=False, help_text="Whether the server is a gcloud server")
 
 
 class Jobs(models.Model):
