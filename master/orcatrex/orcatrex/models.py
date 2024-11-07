@@ -13,7 +13,10 @@ class Slave(models.Model):
 
 
 class Jobs(models.Model):
+
+  STATUS_CHOICES = (("Pending", "pending"), ("Running", "running"), ("Completed", "completed"))
+
   command = models.CharField(max_length=200, help_text="Command to be executed")
   dir_name = models.CharField(max_length=200, help_text="Dir name of updated files")
-  status = models.TextChoices("Completed", "Pending", "Running", default="Pending", help_text="Is Job still pending?")
+  status = models.CharField(choices=STATUS_CHOICES, default="Pending", help_text="Is Job still pending?", max_length=200)
   created_at = models.DateTimeField(auto_now_add=True)

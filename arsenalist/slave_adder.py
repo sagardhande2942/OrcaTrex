@@ -1,4 +1,4 @@
-""" Utility module to send slave data to the master for new slave workers"""
+"""Utility module to send slave data to the master for new slave workers"""
 
 from __future__ import annotations
 

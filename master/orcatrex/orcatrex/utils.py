@@ -59,7 +59,7 @@ def get_slave_data():
 
 
 def get_jobs_data():
-  jobs = Jobs.objects.order_by("-created_at").all().filter(pending=True)
+  jobs = Jobs.objects.order_by("-created_at").all().filter(status="Pending")
   jobs_q = deque()
   for job in jobs:
     jobs_q.append(model_to_dict(job))

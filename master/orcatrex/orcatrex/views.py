@@ -37,8 +37,11 @@ class GetJobs(View):
     SLAVE_DATA[best_slave]["number_of_existing_executions"] += 1
     execute_jobs(best_slave, model_to_dict(job_data))
     job_update = Jobs.objects.get(id=job_data.id)
-    job_update.update(pending=False)
+    job_update.update(status="Running")
     SLAVE_DATA[best_slave]["number_of_existing_executions"] -= 1
+    job_update = Jobs.objects.get(id=job_data.id)
+    job_update.update(status="Completed")
+
     return HttpResponse(status=200)
 
 
