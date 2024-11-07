@@ -32,7 +32,7 @@ class GetJobs(APIView):
 
     if not best_slave:
       JOBS_Q.append(job_data)
-      return Response(status=420)
+      return Response(data={'data': best_slave}, status=420)
 
     SLAVE_DATA[best_slave]["number_of_existing_executions"] += 1
     execute_jobs(best_slave, model_to_dict(job_data))
