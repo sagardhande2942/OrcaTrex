@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import time
 
 
 class GCloudUtility:
@@ -163,6 +164,7 @@ class DockerUtility:
     if not self.image:
       raise ValueError("Image for the docker container is not set")
     try:
+      time.sleep(15)
       command = f'docker ps -q -f ancestor={self.image}'
       result = self.server.run_command(command)
       container_id = result.strip()
