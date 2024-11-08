@@ -121,6 +121,7 @@ class DockerUtility:
     try:
       command = f'docker load -i {self.image}'
       output = self.server.run_command(command)
+      output = re.search(r"sha256:([a-f0-9]{64})", output)
       self.image_id = output
       command = f'docker tag {output} trade-ai-image:latest'
       tag_output = self.server.run_command(command)
