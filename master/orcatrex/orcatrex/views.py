@@ -38,13 +38,13 @@ class GetJobs(APIView):
       JOBS_Q.append(job_data)
       return Response(data={'data': best_slave}, status=420)
 
-    SLAVE_DATA[best_slave["username"]]["number_of_executions"] += 1
+    SLAVE_DATA[best_slave["hostname"]]["number_of_executions"] += 1
     execute_jobs(best_slave, model_to_dict(job_data))
 
     # Update job status to Running and then Completed
     job_update = Jobs.objects.filter(id=job_data.id)
     job_update.update(status="Running")
-    SLAVE_DATA[best_slave["username"]]["number_of_executions"] -= 1
+    SLAVE_DATA[best_slave["hostname"]]["number_of_executions"] -= 1
     job_update.update(status="Completed")
 
     return Response(status=200)
