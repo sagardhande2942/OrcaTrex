@@ -82,7 +82,7 @@ def slave_job_executor(slave, job_data):
     server_obj = ServerUtility(slave["hostname"], slave["username"])
   docker = DockerUtility(server_obj)
   docker.kill_all_containers()
-  docker.set_image("trade-ai-")
+  docker.set_image("trade-ai-image")
   docker.load_docker_image()
   docker.start_docker_image()
   copy_to_server(slave, job_data["dir_name"])
@@ -98,7 +98,7 @@ def walk_dir(files_list, path):
 
 
 def copy_to_server(slave, dir_name):
-  if slave.is_gcloud:
+  if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
     server_obj.activate_gcloud_account()
   else:
@@ -128,7 +128,7 @@ def execute_jobs(slave, job_data):
 # Recurring function to execute pending jobs when slaves are available
 def check_job_queue(slave_data, slave_pq, job_q: deque):
   best_slave = slave_pq.get()
-  if not best_slave or slave_data[best_slave]["number_of_executions"] > 0:
+  if not best_slave or slave_data[best_slave]["number_of_executions"] > 0 or not len(job_q):
     return
   job_data = job_q.popleft()
   execute_jobs(slave_data[best_slave], job_data)
