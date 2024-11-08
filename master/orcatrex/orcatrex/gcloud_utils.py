@@ -104,7 +104,9 @@ class DockerUtility:
 
   def kill_all_containers(self):
     try:
-      final_command = f"docker kill $(docker ps -q)"
+      command = f"docker ps -q"
+      result = self.server.run_command(command)
+      final_command = f"docker kill {result}"
       result = self.server.run_command(final_command)
       return result
     except subprocess.CalledProcessError as e:
