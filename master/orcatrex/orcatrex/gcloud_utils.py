@@ -164,6 +164,7 @@ class DockerUtility:
       command = f'docker ps -q -f ancestor={self.image}'
       result = self.server.run_command(command)
       container_id = result.strip()
+      self.container_id = container_id
       return container_id if container_id else None
     except Exception as e:
       print(f"Error retrieving Docker container ID: {e}")
