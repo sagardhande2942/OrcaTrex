@@ -122,6 +122,8 @@ class DockerUtility:
       command = f'docker load -i {self.image}'
       output = self.server.run_command(command)
       self.image_id = output
+      command = f'docker tag {output} trade-ai-image:latest'
+      tag_output = self.server.run_command(command)
       return output
     except Exception as e:
       print(f"Error loading Docker image: {e}")
@@ -145,7 +147,7 @@ class DockerUtility:
       else:
         if self.check_if_container_up():
           return
-        start_command = f'docker run -d {self.image}'
+        start_command = f'docker run -d {self.image_id}'
         result = self.server.run_command(start_command)
         self.container_id = result.strip()
         return f"Started new container '{self.container_id}' from image '{self.image}'."
