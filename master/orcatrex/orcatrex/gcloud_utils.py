@@ -102,8 +102,6 @@ class DockerUtility:
 
   def kill_all_containers(self):
     try:
-      if not self.image or not self.container_id:
-        raise ValueError("image/container for the docker is not set")
       final_command = f"docker kill $(docker ps -q)"
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
