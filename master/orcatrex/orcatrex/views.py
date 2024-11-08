@@ -68,7 +68,7 @@ class SlaveAdder(APIView):
 
     SLAVE_PQ.add(model_to_dict(new_slave))
     SLAVE_DATA[new_slave.hostname] = model_to_dict(new_slave)
-    copy_image(SLAVE_DATA[hostname], "/home/tradai/trade-ai-image")
+    copy_image(SLAVE_DATA[hostname], "/home/tradeai/trade-ai-image")
 
     return Response(status=200)
 
