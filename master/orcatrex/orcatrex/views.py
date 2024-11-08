@@ -5,8 +5,8 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (PriorityQueue, check_job_queue, check_slave_queue, execute_jobs, get_best_slave, get_jobs_data,
-                            get_slave_data, run_in_background)
+from orcatrex.utils import (PriorityQueue, check_job_queue, check_slave_queue, copy_image, execute_jobs, get_best_slave,
+                            get_jobs_data, get_slave_data, run_in_background)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -68,5 +68,17 @@ class SlaveAdder(APIView):
 
     SLAVE_PQ.add(model_to_dict(new_slave))
     SLAVE_DATA[new_slave.hostname] = model_to_dict(new_slave)
+    copy_image(SLAVE_DATA[hostname], "/home/tradai/trade-ai-image")
+
+    return Response(status=200)
+
+
+class UpdateImage(APIView):
+
+  def post(self, request):
+    global SLAVE_DATA
+    hostname = request.data.get("hostname")
+
+    copy_image(SLAVE_DATA[hostname], "/home/tradeai/trade-ai-image")
 
     return Response(status=200)

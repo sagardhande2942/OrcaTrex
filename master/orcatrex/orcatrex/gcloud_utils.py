@@ -50,8 +50,9 @@ class GCloudUtility:
 
 class ServerUtility:
 
-  def __init__(self, hostname):
+  def __init__(self, hostname, username):
     self.hostname = hostname
+    self.username = username
 
   def run_command(self, command):
     """Runs a gcloud command and returns the output."""
@@ -67,7 +68,7 @@ class ServerUtility:
 
   def scp(self, src, dest):
     try:
-      final_command = f'scp localhost:{src} {self.hostname}:{dest}'
+      final_command = f'scp localhost:{src} {self.username}@{self.hostname}:{dest}'
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
     except subprocess.CalledProcessError as e:

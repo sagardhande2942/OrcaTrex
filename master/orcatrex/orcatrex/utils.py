@@ -79,9 +79,10 @@ def slave_job_executor(slave, job_data):
     server_obj = GCloudUtility(slave["hostname"])
     server_obj.activate_gcloud_account()
   else:
-    server_obj = ServerUtility(slave["hostname"])
+    server_obj = ServerUtility(slave["hostname"], slave["username"])
   docker = DockerUtility(server_obj)
   docker.kill_all_containers()
+  docker.set_image("trade-ai-")
   docker.load_docker_image()
   docker.start_docker_image()
   copy_to_server(slave, job_data["dir_name"])
@@ -101,7 +102,7 @@ def copy_to_server(slave, dir_name):
     server_obj = GCloudUtility(slave["hostname"])
     server_obj.activate_gcloud_account()
   else:
-    server_obj = ServerUtility(slave["hostname"])
+    server_obj = ServerUtility(slave["hostname"], slave["username"])
 
   files_list = []
   walk_dir(files_list, f"/home/tradeai/temp/{dir_name}")
@@ -110,11 +111,6 @@ def copy_to_server(slave, dir_name):
     temp_index = file.split("/").index("temp")
     file_dest = "/home/tradeai/" + "/".join(file.split("/")[temp_index + 1:])
     server_obj.scp(file, file_dest)
-
-
-"""
-To be run after code sync from api endpoint under job_id folder
-"""
 
 
 def get_best_slave(slave_data, slave_pq):
@@ -136,6 +132,14 @@ def check_job_queue(slave_data, slave_pq, job_q: deque):
     return
   job_data = job_q.popleft()
   execute_jobs(slave_data[best_slave], job_data)
+
+
+def copy_image(slave, image_path):
+  if slave["is_gcloud"]:
+    server_obj = GCloudUtility(slave["hostname"])
+  else:
+    server_obj = ServerUtility(slave["hostname"], slave["username"])
+  server_obj.scp(src=image_path, dest="~/trade-ai-image")
 
 
 def check_slave_queue(slave_pq):
