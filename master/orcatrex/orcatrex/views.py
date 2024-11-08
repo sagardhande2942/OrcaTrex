@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (PriorityQueue, check_job_queue, copy_to_server, execute_jobs, get_best_slave, get_jobs_data,
+from orcatrex.utils import (PriorityQueue, check_job_queue, check_slave_queue, execute_jobs, get_best_slave, get_jobs_data,
                             get_slave_data, run_in_background)
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +18,10 @@ JOBS_Q = get_jobs_data()
 job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10, SLAVE_DATA, SLAVE_PQ, JOBS_Q))
 job_queue_executor.daemon = True
 job_queue_executor.start()
+
+slave_queue = threading.Thread(target=run_in_background, args=(check_slave_queue, 10, SLAVE_DATA, SLAVE_PQ, JOBS_Q))
+slave_queue.daemon = True
+slave_queue.start()
 
 
 class GetJobs(APIView):

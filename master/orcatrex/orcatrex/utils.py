@@ -138,6 +138,12 @@ def check_job_queue(slave_data, slave_pq, job_q: deque):
   execute_jobs(slave_data[best_slave], job_data)
 
 
+def check_slave_queue(slave_pq):
+  for slave in ModelSlave.objects.all().order_by('number_of_executions').filter(active=True):
+    slave_pq.add(model_to_dict(slave))
+  return slave_pq
+
+
 class CpuData(NamedTuple):
   cpu: float
   used_mem: float
