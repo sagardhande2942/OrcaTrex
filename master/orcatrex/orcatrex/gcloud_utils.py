@@ -82,6 +82,7 @@ class DockerUtility:
 
   def __init__(self, server_obj):
     self.image = None
+    self.image_id = None
     self.server = server_obj
     self.container_id = None
 
@@ -120,6 +121,7 @@ class DockerUtility:
     try:
       command = f'docker load -i {self.image}'
       output = self.server.run_command(command)
+      self.image_id = output
       return output
     except Exception as e:
       print(f"Error loading Docker image: {e}")
