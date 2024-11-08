@@ -19,7 +19,7 @@ job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_
 job_queue_executor.daemon = True
 job_queue_executor.start()
 
-slave_queue = threading.Thread(target=run_in_background, args=(check_slave_queue, 10, SLAVE_DATA, SLAVE_PQ, JOBS_Q))
+slave_queue = threading.Thread(target=run_in_background, args=(check_slave_queue, 10, SLAVE_PQ))
 slave_queue.daemon = True
 slave_queue.start()
 

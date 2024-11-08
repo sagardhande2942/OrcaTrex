@@ -70,12 +70,12 @@ def get_jobs_data():
 
 def run_in_background(func, freq, *args, **kwargs):
   while True:
-    time.sleep(freq)
     func(*args, **kwargs)
+    time.sleep(freq)
 
 
 def slave_job_executor(slave, job_data):
-  if slave.is_gcloud:
+  if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
     server_obj.activate_gcloud_account()
   else:
