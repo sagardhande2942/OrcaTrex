@@ -61,7 +61,7 @@ def get_slave_data():
 
 
 def get_jobs_data():
-  jobs = Jobs.objects.order_by("-created_at").all().filter(status="Pending")
+  jobs = Jobs.objects.filter(status="Pending").order_by("-created_at")
   jobs_q = deque()
   for job in jobs:
     jobs_q.append(model_to_dict(job))
@@ -131,7 +131,11 @@ def check_job_queue(slave_data, slave_pq, job_q: deque):
   if not best_slave or slave_data[best_slave]["number_of_executions"] > 0 or not len(job_q):
     return
   job_data = job_q.popleft()
-  execute_jobs(slave_data[best_slave], job_data)
+  try:
+    execute_jobs(slave_data[best_slave], job_data)
+  except Exception as e:
+    print(e)
+    job_q.append(job_data)
 
 
 def copy_image(slave, image_path):
@@ -143,7 +147,7 @@ def copy_image(slave, image_path):
 
 
 def check_slave_queue(slave_pq):
-  for slave in ModelSlave.objects.all().order_by('number_of_executions').filter(active=True):
+  for slave in ModelSlave.objects.all().order_by("number_of_executions").filter(active=True):
     slave_pq.add(model_to_dict(slave))
   return slave_pq
 
