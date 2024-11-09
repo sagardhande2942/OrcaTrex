@@ -111,7 +111,7 @@ def copy_to_server(slave, dir_name):
 
   for file in files_list:
     temp_index = file.split("/").index("temp")
-    file_dest = "/home/tradeai/" + "/".join(file.split("/")[temp_index + 1:])
+    file_dest = "/home/tradeai/" + "/".join(file.split("/")[temp_index + 2:])
     server_obj.scp(file, file_dest)
 
 
