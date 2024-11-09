@@ -111,8 +111,15 @@ def copy_to_server(slave, dir_name):
 
   for file in files_list:
     temp_index = file.split("/").index("temp")
-    file_dest = "~/" + "/".join(file.split("/")[temp_index + 2:])
+    file_dest = "temp/" + "/".join(file.split("/")[temp_index + 2:])
+    docker_dest = "/home/tradeai/" + "/".join(file.split("/")[temp_index + 2:])
+    server_obj.run_command("rm -rf temp")
+    server_obj.run_command("mkdir temp")
     server_obj.scp(file, file_dest)
+    docker_obj = DockerUtility(server_obj)
+    docker_obj.set_image("trade-ai-image")
+    container_id = docker_obj.get_docker_container_id()
+    server_obj.run_command(f"docker cp {file_dest} {container_id}:{docker_dest}")
 
 
 def get_best_slave(slave_data, slave_pq):
