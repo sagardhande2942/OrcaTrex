@@ -93,7 +93,9 @@ def slave_job_executor(slave, job_data):
 def walk_dir(files_list, path):
   for root, dirs, files in os.walk(path):
     for file in files:
-      full_file_path = "/".join(os.path.join(root, file).split("/").insert(2, "temp"))
+      full_file_path = os.path.join(root, file).split("/")
+      full_file_path.insert(2, "temp")
+      full_file_path = "/".join(full_file_path)
       files_list.append(full_file_path)
     for dir_name in dirs:
       walk_dir(files_list, f"{path}/{dir_name}")
