@@ -31,11 +31,10 @@ class GetJobs(APIView):
 
     best_slave.number_of_executions = best_slave.number_of_executions + 1
     best_slave.save()
-    execute_jobs(model_to_dict(best_slave), model_to_dict(job_data))
-
-    # Update job status to Running and then Completed
     job_update = Jobs.objects.filter(id=job_data.id)
     job_update.update(status="Running")
+    execute_jobs(model_to_dict(best_slave), model_to_dict(job_data))
+    # Update job status to Running and then Completed
     best_slave.number_of_executions = best_slave.number_of_executions - 1
     best_slave.save()
     job_update.update(status="Completed")
