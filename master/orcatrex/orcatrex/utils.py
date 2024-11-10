@@ -144,15 +144,19 @@ def check_job_queue():
   best_slave = best_slave.first()
   job_data = job_data.first()
   try:
-    job_data.update(status="Running")
-    best_slave.update(number_of_executions=1)
+    job_data.status = "Running"
+    best_slave.number_of_executions = 1
+    job_data.save()
+    best_slave.save()
     execute_jobs(model_to_dict(best_slave), model_to_dict(job_data))
-    job_data.update(status="Completed")
+    job_data.status = "Completed"
   except Exception as e:
     print(f"Error in auto job queue checker: {e}")
-    job_data.update(status="Pending")
+    job_data.status = "Pending"
   finally:
-    best_slave.update(number_of_executions=0)
+    best_slave.number_of_executions = 0
+    job_data.save()
+    best_slave.save()
 
 
 def copy_image(slave, image_path):
