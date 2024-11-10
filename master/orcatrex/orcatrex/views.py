@@ -5,23 +5,14 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (PriorityQueue, check_job_queue, check_slave_queue, copy_image, execute_jobs, get_best_slave,
-                            get_jobs_data, get_slave_data, run_in_background)
+from orcatrex.utils import (check_job_queue, copy_image, execute_jobs, run_in_background)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-SLAVE_DATA = get_slave_data()
-SLAVE_PQ = PriorityQueue()
-JOBS_Q = get_jobs_data()
-
 # Background job queue checker
-job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10, SLAVE_DATA, SLAVE_PQ, JOBS_Q))
+job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10))
 job_queue_executor.daemon = True
 job_queue_executor.start()
-
-slave_queue = threading.Thread(target=run_in_background, args=(check_slave_queue, 10, SLAVE_PQ))
-slave_queue.daemon = True
-slave_queue.start()
 
 
 class GetJobs(APIView):
@@ -30,21 +21,20 @@ class GetJobs(APIView):
     command = request.data.get("command")
     dir_name = request.data.get("dir")
 
-    best_slave = get_best_slave(SLAVE_DATA, SLAVE_PQ)
+    best_slave = ModelSlave.objects.filter(number_of_executions=0)
     job_data = Jobs(command=command, dir_name=dir_name)
     job_data.save()
 
-    if not best_slave:
-      JOBS_Q.append(job_data)
-      return Response(data={'data': best_slave}, status=420)
+    if not len(best_slave):
+      return Response(data={'data': best_slave}, status=404)
 
-    SLAVE_DATA[best_slave["hostname"]]["number_of_executions"] += 1
-    execute_jobs(best_slave, model_to_dict(job_data))
+    best_slave[0].update(number_of_executions=best_slave[0].number_of_executions + 1)
+    execute_jobs(model_to_dict(best_slave[0]), model_to_dict(job_data))
 
     # Update job status to Running and then Completed
     job_update = Jobs.objects.filter(id=job_data.id)
     job_update.update(status="Running")
-    SLAVE_DATA[best_slave["hostname"]]["number_of_executions"] -= 1
+    best_slave[0].update(number_of_executions=best_slave[0].number_of_executions - 1)
     job_update.update(status="Completed")
 
     return Response(status=200)
@@ -53,7 +43,6 @@ class GetJobs(APIView):
 class SlaveAdder(APIView):
 
   def post(self, request):
-    global SLAVE_DATA
 
     username = request.data.get("username")
     hostname = request.data.get("hostname")
@@ -66,9 +55,7 @@ class SlaveAdder(APIView):
     new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud)
     new_slave.save()
 
-    SLAVE_PQ.add(model_to_dict(new_slave))
-    SLAVE_DATA[new_slave.hostname] = model_to_dict(new_slave)
-    copy_image(SLAVE_DATA[hostname], "/home/tradeai/trade-ai-image")
+    copy_image(model_to_dict(new_slave), "/home/tradeai/trade-ai-image")
 
     return Response(status=200)
 
@@ -78,7 +65,6 @@ class UpdateImage(APIView):
   def post(self, request):
     global SLAVE_DATA
     hostname = request.data.get("hostname")
-
-    copy_image(SLAVE_DATA[hostname], "/home/tradeai/trade-ai-image")
+    copy_image(ModelSlave.objects.filter(hostname=hostname).values()[0], "/home/tradeai/trade-ai-image")
 
     return Response(status=200)

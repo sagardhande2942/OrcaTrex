@@ -136,16 +136,21 @@ def execute_jobs(slave, job_data):
 
 
 # Recurring function to execute pending jobs when slaves are available
-def check_job_queue(slave_data, slave_pq, job_q: deque):
-  best_slave = slave_pq.get()
-  if not best_slave or slave_data[best_slave]["number_of_executions"] > 0 or not len(job_q):
+def check_job_queue():
+  best_slave = ModelSlave.objects.filter(number_of_executions=0)
+  job_data = Jobs.objects.filter(status="Pending")
+  if not len(best_slave) or not len(job_data):
     return
-  job_data = job_q.popleft()
   try:
-    execute_jobs(slave_data[best_slave], job_data)
+    job_data.update(status="Running")
+    best_slave.update(number_of_executions=1)
+    execute_jobs(model_to_dict(best_slave), model_to_dict(job_data))
+    job_data.update(status="Completed")
   except Exception as e:
-    print(e)
-    job_q.append(job_data)
+    print(f"Error in auto job queue checker: {e}")
+    job_data.update(status="Pending")
+  finally:
+    best_slave.update(number_of_executions=0)
 
 
 def copy_image(slave, image_path):
