@@ -25,16 +25,17 @@ class GetJobs(APIView):
     job_data = Jobs(command=command, dir_name=dir_name)
     job_data.save()
 
-    if not len(best_slave):
+    if not best_slave.exists():
       return Response(data={'data': best_slave}, status=404)
+    best_slave = best_slave.first()
 
-    best_slave[0].update(number_of_executions=best_slave[0].number_of_executions + 1)
-    execute_jobs(model_to_dict(best_slave[0]), model_to_dict(job_data))
+    best_slave.update(number_of_executions=best_slave.number_of_executions + 1)
+    execute_jobs(model_to_dict(best_slave), model_to_dict(job_data))
 
     # Update job status to Running and then Completed
     job_update = Jobs.objects.filter(id=job_data.id)
     job_update.update(status="Running")
-    best_slave[0].update(number_of_executions=best_slave[0].number_of_executions - 1)
+    best_slave.update(number_of_executions=best_slave.number_of_executions - 1)
     job_update.update(status="Completed")
 
     return Response(status=200)
@@ -65,6 +66,7 @@ class UpdateImage(APIView):
   def post(self, request):
     global SLAVE_DATA
     hostname = request.data.get("hostname")
-    copy_image(ModelSlave.objects.filter(hostname=hostname).values()[0], "/home/tradeai/trade-ai-image")
+
+    copy_image(model_to_dict(ModelSlave.objects.filter(hostname=hostname).first()), "/home/tradeai/trade-ai-image")
 
     return Response(status=200)
