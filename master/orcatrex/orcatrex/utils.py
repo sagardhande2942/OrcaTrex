@@ -137,10 +137,12 @@ def execute_jobs(slave, job_data):
 
 # Recurring function to execute pending jobs when slaves are available
 def check_job_queue():
-  best_slave = ModelSlave.objects.filter(number_of_executions=0).first()
-  job_data = Jobs.objects.filter(status="Pending").first()
+  best_slave = ModelSlave.objects.filter(number_of_executions=0)
+  job_data = Jobs.objects.filter(status="Pending")
   if not best_slave.exists() or not job_data.exists():
     return
+  best_slave = best_slave.first()
+  job_data = job_data.first()
   try:
     job_data.update(status="Running")
     best_slave.update(number_of_executions=1)
