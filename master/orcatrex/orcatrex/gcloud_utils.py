@@ -2,19 +2,22 @@ from __future__ import annotations
 
 import re
 import subprocess
-import time
-
+import requests
+import json
 
 class GCloudUtility:
 
-  def __init__(self, account_email):
+  def __init__(self, account_email,ip=None,port=6000):
     self.account_email = account_email
+    self.username = self.account_email.split('@')[0]
+    self.ip = ip
+    self.port = port
 
-  @staticmethod
-  def run_command(command):
+  def run_command(self,command):
     """Runs a gcloud command and returns the output."""
     try:
-      final_command = f'gcloud cloud-shell ssh --authorize-session --command="{command}"'
+      final_command = f'ssh -i /home/tradeai/.ssh/google_compute_engine -p 6000 -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=5 {self.username}@{self.ip} "{command}"'
+      print(final_command)
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
     except subprocess.CalledProcessError as e:
@@ -23,6 +26,53 @@ class GCloudUtility:
       print(f"Error: {e.stderr}")
       return None
 
+  def start_machine(self):
+    """Start The Gcloud shell machine"""
+    access_token = self.get_access_token()
+    url = "https://content-cloudshell.googleapis.com/v1/users/me/environments/default:start"
+
+    headers = {
+      'Content-Type': 'application/json',
+      'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.request("POST", url, headers=headers)
+
+    if response.status_code !=200:
+      return None
+    else:
+      return True
+
+  def get_access_token(self):
+    """
+    fetches access token from gcloud cli
+
+    Returns:
+        _type_: string
+    """
+    self.activate_gcloud_account()
+    command = f"gcloud auth print-access-token"
+    result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.stdout.strip()
+  
+  def get_machine_ip_port(self):
+    """Get Machine IP and Port"""
+    url = "https://content-cloudshell.googleapis.com/v1/users/me/environments/default"
+
+    payload = {}
+    access_token = self.get_access_token()
+    headers = {
+      'Authorization': f'Bearer {access_token}'
+    }
+    response = requests.request("GET", url, headers=headers, data=payload)
+    if response.status_code == 401:
+      return None,None
+    response = response.json()
+    if response["state"] != 'RUNNING':
+      return None,None
+    else:
+      return response["sshHost"],response["sshPort"]
+    
   @staticmethod
   def list_gcloud_accounts():
     """Lists all authenticated Google Cloud accounts."""
@@ -34,12 +84,12 @@ class GCloudUtility:
   def activate_gcloud_account(self):
     """Activates a specified Google Cloud account."""
     command = f"gcloud config set account {self.account_email}"
-    output = self.run_command(command)
-    return output
+    result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.stdout.strip()
 
   def scp(self, src, dest):
     try:
-      final_command = f'gcloud cloud-shell scp localhost:{src} cloudshell:{dest}'
+      final_command = f'scp -i /home/tradeai/.ssh/google_compute_engine -P 6000 -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=5 {src} {self.username}@{self.ip}:{dest}'
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
     except subprocess.CalledProcessError as e:
@@ -47,6 +97,8 @@ class GCloudUtility:
       print(f"Output: {e.output}")
       print(f"Error: {e.stderr}")
       return None
+  
+  
 
 
 class ServerUtility:

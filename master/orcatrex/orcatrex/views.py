@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (check_job_queue, copy_image, execute_jobs, run_in_background)
+from orcatrex.utils import (check_job_queue, copy_image, execute_jobs, run_in_background,kill_all_glcoud_server_containers)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -70,4 +70,10 @@ class UpdateImage(APIView):
 
     copy_image(model_to_dict(ModelSlave.objects.filter(hostname=hostname).first()), "/home/tradeai/trade-ai-image")
 
+    return Response(status=200)
+  
+class KillAllServerContainers(APIView):
+  
+  def post(self,request):
+    kill_all_glcoud_server_containers()
     return Response(status=200)

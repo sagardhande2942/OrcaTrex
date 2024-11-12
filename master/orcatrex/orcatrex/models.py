@@ -4,6 +4,8 @@ from django.db import models
 class Slave(models.Model):
   username = models.CharField(max_length=100, help_text="Username of the host machine")
   hostname = models.CharField(max_length=100, help_text="hostname/email of the host machine", primary_key=True)
+  ip = models.CharField(max_length=100, help_text="IP of the host machine")
+  port = models.IntegerField(blank=True,null=True)
   active = models.BooleanField(default=True, help_text="Is the server active?")
   cpu = models.FloatField(default=0, help_text="Cpu usage of the server")
   used_mem = models.FloatField(default=0, help_text="Mem usage of the server")

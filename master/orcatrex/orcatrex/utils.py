@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 import pathlib
 import time
 from collections import deque
@@ -77,7 +78,24 @@ def run_in_background(func, freq, *args, **kwargs):
 def slave_job_executor(slave, job_data):
   if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
-    server_obj.activate_gcloud_account()
+    started = server_obj.start_machine()
+    if not started:
+      raise Exception(f"Machine {slave['hostname']} not started")
+    time.sleep(10)
+    ip,port = server_obj.get_machine_ip_port()
+    if ip and port:
+      data = {
+        "ip":ip,
+        "port":port
+      }
+      model_obj = ModelSlave.objects.filter(hostname=slave["hostname"]).first()
+      model_obj.ip = ip
+      model_obj.port = port
+      model_obj.save()
+      server_obj.ip = ip
+      server_obj.port = port
+    else:
+      raise Exception("Ip and Port not found")
   else:
     server_obj = ServerUtility(slave["hostname"], slave["username"])
   docker = DockerUtility(server_obj)
@@ -85,7 +103,7 @@ def slave_job_executor(slave, job_data):
   docker.set_image("trade-ai-image")
   docker.load_docker_image()
   docker.start_docker_image()
-  copy_to_server(slave, job_data["dir_name"])
+  copy_to_server(slave, job_data["dir_name"],server_obj)
   output = docker.run_docker_command(job_data["command"])
   return output
 
@@ -99,12 +117,7 @@ def walk_dir(files_list, path):
       walk_dir(files_list, f"{path}/{dir_name}")
 
 
-def copy_to_server(slave, dir_name):
-  if slave["is_gcloud"]:
-    server_obj = GCloudUtility(slave["hostname"])
-    server_obj.activate_gcloud_account()
-  else:
-    server_obj = ServerUtility(slave["hostname"], slave["username"])
+def copy_to_server(slave, dir_name,server_obj):
 
   files_list = []
   walk_dir(files_list, f"/home/tradeai/temp/{dir_name}")
@@ -162,6 +175,22 @@ def check_job_queue():
 def copy_image(slave, image_path):
   if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
+    started = server_obj.start_machine()
+    if not started:
+      raise Exception(f"Machine {slave['hostname']} not started")
+    time.sleep(10)
+    ip,port = server_obj.get_machine_ip_port()
+    if ip and port:
+      data = {
+        "ip":ip,
+        "port":port
+      }
+      model_obj = ModelSlave.objects.filter(hostname=slave["hostname"]).first()
+      model_obj.ip = ip
+      model_obj.port = port
+      model_obj.save()
+      server_obj.ip = ip
+      server_obj.port = port
   else:
     server_obj = ServerUtility(slave["hostname"], slave["username"])
   server_obj.scp(src=image_path, dest="~/trade-ai-image")
@@ -172,6 +201,24 @@ def check_slave_queue(slave_pq):
     slave_pq.add(model_to_dict(slave))
   return slave_pq
 
+def kill_all_glcoud_server_containers():
+   for slave in ModelSlave.objects.all():
+      print(slave)
+      server_obj = GCloudUtility(slave.hostname)
+      ip,port = server_obj.get_machine_ip_port()
+      if ip and port:
+        data = {
+          "ip":ip,
+          "port":port
+        }
+        model_obj = ModelSlave.objects.filter(hostname=slave.hostname).first()
+        model_obj.ip = ip
+        model_obj.port = port
+        model_obj.save()
+        server_obj.ip = ip
+        server_obj.port = port 
+        docker = DockerUtility(server_obj)
+        docker.kill_all_containers()
 
 class CpuData(NamedTuple):
   cpu: float
