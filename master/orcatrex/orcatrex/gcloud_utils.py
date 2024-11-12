@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
+
 import requests
-import json
+
 
 class GCloudUtility:
 
@@ -108,7 +110,7 @@ class ServerUtility:
   def run_command(self, command):
     """Runs a gcloud command and returns the output."""
     try:
-      final_command = f'ssh self.hostname "{command}"'
+      final_command = f'sshpass -pViS29@@@ ssh {self.hostname} "{command}"'
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
     except subprocess.CalledProcessError as e:
@@ -119,7 +121,7 @@ class ServerUtility:
 
   def scp(self, src, dest):
     try:
-      final_command = f'scp localhost:{src} {self.username}@{self.hostname}:{dest}'
+      final_command = f'sshpass -pViS29@@@ scp localhost:{src} {self.username}@{self.hostname}:{dest}'
       result = subprocess.run(final_command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
       return result.stdout.strip()
     except subprocess.CalledProcessError as e:
