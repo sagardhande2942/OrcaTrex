@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import time
 import pathlib
 import time
 from collections import deque
@@ -283,7 +282,7 @@ class PriorityQueue(object):
 
 
 def update_access_tokens():
-  for slave in ModelSlave.objects.all():
+  for slave in ModelSlave.objects.filter(is_gcloud=True, active=True):
     print("Updating Access Token for",slave)
     server_obj = GCloudUtility(slave.hostname)
     access_token = server_obj.get_access_token()
