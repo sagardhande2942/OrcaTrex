@@ -172,6 +172,7 @@ def check_job_queue():
 
 
 def copy_image(slave, image_path):
+  print(slave)
   if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
     started = server_obj.start_machine(slave["access_token"])

@@ -59,6 +59,8 @@ class SlaveAdder(APIView):
     port = request.data.get("port")
     active = request.data.get("active", False)
     is_gcloud = request.data.get("is_gcloud", False)
+    if type(is_gcloud) != bool:
+      is_gcloud = True if is_gcloud == "True" else False
 
     if not username or not hostname:
       return Response(data={"error": "Username/hostname not provided"}, status=420)
