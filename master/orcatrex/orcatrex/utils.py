@@ -78,11 +78,11 @@ def run_in_background(func, freq, *args, **kwargs):
 def slave_job_executor(slave, job_data):
   if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
-    started = server_obj.start_machine()
+    started = server_obj.start_machine(slave["access_token"])
     if not started:
       raise Exception(f"Machine {slave['hostname']} not started")
     time.sleep(10)
-    ip,port = server_obj.get_machine_ip_port()
+    ip,port = server_obj.get_machine_ip_port(slave["access_token"])
     if ip and port:
       data = {
         "ip":ip,
@@ -175,11 +175,11 @@ def check_job_queue():
 def copy_image(slave, image_path):
   if slave["is_gcloud"]:
     server_obj = GCloudUtility(slave["hostname"])
-    started = server_obj.start_machine()
+    started = server_obj.start_machine(slave["access_token"])
     if not started:
       raise Exception(f"Machine {slave['hostname']} not started")
     time.sleep(10)
-    ip,port = server_obj.get_machine_ip_port()
+    ip,port = server_obj.get_machine_ip_port(slave["access_token"])
     if ip and port:
       data = {
         "ip":ip,
@@ -205,7 +205,7 @@ def kill_all_glcoud_server_containers():
    for slave in ModelSlave.objects.all():
       print(slave)
       server_obj = GCloudUtility(slave.hostname)
-      ip,port = server_obj.get_machine_ip_port()
+      ip,port = server_obj.get_machine_ip_port(slave.access_token)
       if ip and port:
         data = {
           "ip":ip,
@@ -280,3 +280,13 @@ class PriorityQueue(object):
     except IndexError:
       print()
       exit()
+
+
+def update_access_tokens():
+  for slave in ModelSlave.objects.all():
+    print("Updating Access Token for",slave)
+    server_obj = GCloudUtility(slave.hostname)
+    access_token = server_obj.get_access_token()
+    model_obj = ModelSlave.objects.filter(hostname=slave.hostname).first()
+    model_obj.access_token = access_token
+    model_obj.save()

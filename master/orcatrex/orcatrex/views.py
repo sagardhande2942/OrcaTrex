@@ -5,12 +5,17 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (check_job_queue, copy_image, execute_jobs, run_in_background,kill_all_glcoud_server_containers)
+from orcatrex.utils import (check_job_queue, copy_image, execute_jobs, run_in_background,kill_all_glcoud_server_containers,update_access_tokens)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 # Background job queue checker
 job_queue_executor = threading.Thread(target=run_in_background, args=(check_job_queue, 10))
+job_queue_executor.daemon = True
+job_queue_executor.start()
+
+# Background job access token generator
+job_queue_executor = threading.Thread(target=run_in_background, args=(update_access_tokens, 600))
 job_queue_executor.daemon = True
 job_queue_executor.start()
 

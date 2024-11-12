@@ -12,7 +12,7 @@ class Slave(models.Model):
   free_mem = models.FloatField(default=0, help_text="Free mem available on the server")
   number_of_executions = models.IntegerField(default=0, help_text="Ongoing number of executions on the server")
   is_gcloud = models.BooleanField(default=False, help_text="Whether the server is a gcloud server")
-
+  access_token = models.CharField(max_length=500, help_text="access token for gcloud apis",blank=True,null=True)
 
 class Jobs(models.Model):
 

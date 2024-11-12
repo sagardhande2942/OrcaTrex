@@ -26,9 +26,8 @@ class GCloudUtility:
       print(f"Error: {e.stderr}")
       return None
 
-  def start_machine(self):
+  def start_machine(self,access_token):
     """Start The Gcloud shell machine"""
-    access_token = self.get_access_token()
     url = "https://content-cloudshell.googleapis.com/v1/users/me/environments/default:start"
 
     headers = {
@@ -55,12 +54,11 @@ class GCloudUtility:
     result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout.strip()
   
-  def get_machine_ip_port(self):
+  def get_machine_ip_port(self,access_token):
     """Get Machine IP and Port"""
     url = "https://content-cloudshell.googleapis.com/v1/users/me/environments/default"
 
     payload = {}
-    access_token = self.get_access_token()
     headers = {
       'Authorization': f'Bearer {access_token}'
     }
