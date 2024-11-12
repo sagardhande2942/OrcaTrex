@@ -14,6 +14,8 @@ def _parse_args():
   parser.add_argument("-gcloud", action="store_true", help="Whether the slave is gcloud", default=True)
   parser.add_argument("--slave_account", type=str, help="Account name of the slave", default="cloudshell")
   parser.add_argument("--slave_id", type=str, help="Account ip in case of normal linux. Email in case of GCP", required=True)
+  parser.add_argument("--slave_ip", type=str, help="Account ip in case of normal linux. Email in case of GCP", required=True)
+  parser.add_argument("--slave_port", type=str, help="Slave port", required=True)
   parser.add_argument("--master_ip", type=str, help="IP of the master")
   parser.add_argument("--master_port", type=str, help="Port of the master")
   return vars(parser.parse_args())
@@ -27,7 +29,9 @@ def _main():
       "username": args["slave_account"],
       "hostname": args["slave_id"],
       "active": args["active"],
-      "is_gcloud": args["gcloud"]
+      "is_gcloud": args["gcloud"],
+      "ip": args["slave_ip"],
+      "port": args["slave_port"]    
     })
 
 
