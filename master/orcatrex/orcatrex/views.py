@@ -5,7 +5,9 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from orcatrex.models import Jobs
 from orcatrex.models import Slave as ModelSlave
-from orcatrex.utils import (check_job_queue, copy_image, execute_jobs, run_in_background,kill_all_glcoud_server_containers,update_access_tokens)
+from orcatrex.utils import (check_job_queue, copy_image, execute_jobs,
+                            kill_all_glcoud_server_containers,
+                            run_in_background, update_access_tokens)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -55,11 +57,13 @@ class SlaveAdder(APIView):
     hostname = request.data.get("hostname")
     active = request.data.get("active", False)
     is_gcloud = request.data.get("is_gcloud", False)
+    ip = request.data.get("ip")
+    port = request.data.get("ip")
 
     if not username or not hostname:
       return Response(data={"error": "Username/hostname not provided"}, status=420)
 
-    new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud)
+  new_slave = ModelSlave(username=username, hostname=hostname, active=active, is_gcloud=is_gcloud, ip=ip, port=port)
     new_slave.save()
 
     copy_image(model_to_dict(new_slave), "/home/tradeai/trade-ai-image")
